@@ -1,0 +1,7 @@
+.vs
+.idea
+/*.DotSettings
+/*.suo
+obj
+bin
+*.user

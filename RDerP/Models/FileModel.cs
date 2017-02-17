@@ -1,13 +1,11 @@
-﻿using System.Windows.Controls;
-
-namespace RDerP.ViewModels
+﻿namespace RDerP.Models
 {
-    class FileViewModel
+    class FileModel
     {
         public string Name { get; }
         public string Path { get; }
 
-        public FileViewModel(string path)
+        public FileModel(string path)
         {
             Path = path;
             Name = System.IO.Path.GetFileName(path);

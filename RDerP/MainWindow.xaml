@@ -8,7 +8,7 @@
         mc:Ignorable="d"
         Title="RDerP" Height="425" Width="295" MaxWidth="500">
     <DockPanel>
-        <Button x:Name="add" HorizontalAlignment="Left" Margin="10,10,0,0" DockPanel.Dock="Top">
+        <Button x:Name="add" HorizontalAlignment="Left" Margin="10,10,0,0" DockPanel.Dock="Top" Click="AddRdpItem">
             <Button.Style>
                 <Style TargetType="Button">
                     <Setter Property="Background">
