@@ -37,7 +37,7 @@
     <UseVSHostingProcess>false</UseVSHostingProcess>
   </PropertyGroup>
   <PropertyGroup>
-    <ApplicationIcon>screen.ico</ApplicationIcon>
+    <ApplicationIcon>Screen-Grey.ico</ApplicationIcon>
   </PropertyGroup>
   <PropertyGroup>
     <NoWin32Manifest>true</NoWin32Manifest>
@@ -111,9 +111,6 @@
     <Resource Include="Images\screen.png" />
   </ItemGroup>
   <ItemGroup>
-    <Resource Include="screen.ico" />
-  </ItemGroup>
-  <ItemGroup>
     <Resource Include="Images\screen.ico" />
   </ItemGroup>
   <ItemGroup>
@@ -123,6 +120,12 @@
   </ItemGroup>
   <ItemGroup>
     <Resource Include="Images\tick.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Screen.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Screen-Grey.ico" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
