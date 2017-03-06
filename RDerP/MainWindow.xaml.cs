@@ -1,12 +1,16 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel;
+using System.Data;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
+using Newtonsoft.Json;
 using RDerP.IO;
 using RDerP.Models;
 using RDerP.ViewModels;
@@ -22,11 +26,14 @@ namespace RDerP
         private const int HORRIBLE_CONSTANT = 30;
         private const string MSTSC = "mstsc.exe";
         private DirectoryModel _root;
-        private string _executingDirectory;
+        private readonly string _executingDirectory;
+        private readonly ApplicationState _initialState;
 
         public MainWindow()
         {
             InitializeComponent();
+
+            _initialState = LoadApplicationState();
 
             _executingDirectory = Directory.GetCurrentDirectory();
             _root = new DirectoryModel(_executingDirectory);
@@ -50,7 +57,10 @@ namespace RDerP
         private void AddItemToTreeView(DirectoryModel item, TreeViewItem parent)
         {
             //var newItem = new TreeViewItem {Header = CreateDirectoryHeader(item.Name)};
-            var newItem = new FolderTreeViewItem(CreateDirectoryHeader(item.Name), item.Path);
+            var newItem = new FolderTreeViewItem(CreateDirectoryHeader(item.Name), item.Path)
+            {
+                IsExpanded = _initialState.ExpandedPaths.Contains(item.Path)
+            };
 
             foreach (var sub in item.SubDirectories)
             {
@@ -195,6 +205,73 @@ namespace RDerP
         {
             return element.TransformToAncestor(this)
                 .Transform(new Point(0, 0));
+        }
+
+        protected override void OnClosing(CancelEventArgs e)
+        {
+            //on close, we want to find all the expanded folders and write them to our 'persistence' file
+            try
+            {
+                SaveState();
+            }
+            catch
+            {
+                //swallow the shit out of this bad boy
+            }
+
+            base.OnClosing(e);
+        }
+
+        private void SaveState()
+        {
+            var appState = new ApplicationState {ExpandedPaths = GetExpandedFolders()};
+            var json = JsonConvert.SerializeObject(appState);
+            File.WriteAllText("RDerP.json", json);
+        }
+
+        private IEnumerable<string> GetExpandedFolders()
+        {
+            var folders = new List<string>();
+            GetExpandedFolders(null, folders);
+            return folders;
+        }
+
+        private void GetExpandedFolders(FolderTreeViewItem item, IList<string> folders)
+        {
+            IEnumerable<FolderTreeViewItem> expandedSubs;
+            if (item == null)
+            {
+                expandedSubs =
+                    rdpTree.Items.Cast<TreeViewItem>()
+                        .OfType<FolderTreeViewItem>()
+                        .Where(i => i.IsExpanded);
+            }
+            else
+            {
+                expandedSubs = item.Items.Cast<TreeViewItem>()
+                    .OfType<FolderTreeViewItem>()
+                    .Where(i => i.IsExpanded);
+            }
+
+            foreach (FolderTreeViewItem sub in expandedSubs)
+            {
+                folders.Add(sub.Path);
+                GetExpandedFolders(sub, folders);
+            }
+        }
+
+        private ApplicationState LoadApplicationState()
+        {
+            try
+            {
+                var json = File.ReadAllText("RDerP.json");
+                return JsonConvert.DeserializeObject<ApplicationState>(json);
+            }
+            catch
+            {
+                //if we fail we care not, just give an empty buggery back
+                return new ApplicationState();
+            }
         }
     }
 }
