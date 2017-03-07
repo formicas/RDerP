@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Data;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -25,9 +24,8 @@ namespace RDerP
         //the extra height from the title bar that's not factored into any height calculations
         private const int HORRIBLE_CONSTANT = 30;
         private const string MSTSC = "mstsc.exe";
-        private DirectoryModel _root;
         private readonly string _executingDirectory;
-        private readonly ApplicationState _initialState;
+        private ApplicationState _initialState;
 
         public MainWindow()
         {
@@ -36,79 +34,58 @@ namespace RDerP
             _initialState = LoadApplicationState();
 
             _executingDirectory = Directory.GetCurrentDirectory();
-            _root = new DirectoryModel(_executingDirectory);
 
-            AddRootToTreeView(_root);
+            AddRootToTreeView();
         }
 
-        private void AddRootToTreeView(DirectoryModel root)
+        private void AddRootToTreeView()
         {
-            foreach (var sub in root.SubDirectories)
+            var subDirPaths = Directory.GetDirectories(_executingDirectory);
+
+            foreach (var sub in subDirPaths)
             {
-                AddItemToTreeView(sub, null);
+                var folderItem = new FolderTreeViewItem(CreateDirectoryHeader(Path.GetFileName(sub)), sub)
+                {
+                    IsExpanded = _initialState.ExpandedPaths.Contains(sub)
+                };
+                rdpTree.Items.Add(folderItem);
+                AddChildren(folderItem);
             }
 
-            foreach (var file in root.Files)
+            var filePaths = Directory.GetFiles(_executingDirectory, "*.rdp");
+
+            foreach (var filePath in filePaths)
             {
-                rdpTree.Items.Add(CreateRdpItem(file.Name, file.Path));
+                rdpTree.Items.Add(CreateRdpItem(filePath));
             }
         }
 
-        private void AddItemToTreeView(DirectoryModel item, TreeViewItem parent)
+        private void AddChildren(FolderTreeViewItem parent)
         {
-            //var newItem = new TreeViewItem {Header = CreateDirectoryHeader(item.Name)};
-            var newItem = new FolderTreeViewItem(CreateDirectoryHeader(item.Name), item.Path)
+            var dirPath = parent.Path;
+            
+            var subDirPaths = Directory.GetDirectories(dirPath);
+            foreach (var sub in subDirPaths)
             {
-                IsExpanded = _initialState.ExpandedPaths.Contains(item.Path)
-            };
-
-            foreach (var sub in item.SubDirectories)
-            {
-                AddItemToTreeView(sub, newItem);
-            }
-            foreach (var file in item.Files)
-            {
-                newItem.Items.Add(CreateRdpItem(file.Name, file.Path));
-            }
-
-            if (parent != null)
+                var newItem = new FolderTreeViewItem(CreateDirectoryHeader(Path.GetFileName(sub)), sub)
+                {
+                    IsExpanded = _initialState.ExpandedPaths.Contains(sub)
+                };
                 parent.Items.Add(newItem);
-            else
-                rdpTree.Items.Add(newItem);
-        }
+                AddChildren(newItem);
+            }
 
-        private void OnRdpDoubleClick(object sender, MouseButtonEventArgs args)
-        {
-            var rdpItem = sender as RdpTreeViewItem;
-            if (rdpItem == null) return;
-
-            LaunchRDPSession(rdpItem.Path);
-        }
-
-        private void LaunchRDPSession(string path)
-        {
-            ProcessStartInfo startInfo = new ProcessStartInfo
+            var filePaths = Directory.GetFiles(dirPath, "*.rdp");
+            foreach(var filePath in filePaths)
             {
-                FileName = MSTSC,
-                Arguments = $"\"{path}\""
-            };
-            Process.Start(startInfo);
+                parent.Items.Add(CreateRdpItem(filePath));
+            }
         }
 
-        private void LaunchRDPEdit(string path)
+        private RdpTreeViewItem CreateRdpItem(string path)
         {
-            ProcessStartInfo startInfo = new ProcessStartInfo
-            {
-                FileName = MSTSC,
-                Arguments = $"/edit \"{path}\""
-            };
-
-            Process.Start(startInfo);
-        }
-
-        private RdpTreeViewItem CreateRdpItem(string name, string path)
-        {
-            var item = new RdpTreeViewItem(CreateRdpHeader(name.Replace(".rdp", "")), path);
+            var name = Path.GetFileName(path)?.Replace(".rdp", "");
+            var item = new RdpTreeViewItem(CreateRdpHeader(name), path);
             item.MouseDoubleClick += OnRdpDoubleClick;
             return item;
         }
@@ -136,8 +113,38 @@ namespace RDerP
             return stack;
         }
 
+        private void OnRdpDoubleClick(object sender, MouseButtonEventArgs args)
+        {
+            var rdpItem = sender as RdpTreeViewItem;
+            if (rdpItem == null) return;
+
+            LaunchRDPSession(rdpItem.Path);
+        }
+
+        private void LaunchRDPSession(string path)
+        {
+            var startInfo = new ProcessStartInfo
+            {
+                FileName = MSTSC,
+                Arguments = $"\"{path}\""
+            };
+            Process.Start(startInfo);
+        }
+
+        private void LaunchRDPEdit(string path)
+        {
+            var startInfo = new ProcessStartInfo
+            {
+                FileName = MSTSC,
+                Arguments = $"/edit \"{path}\""
+            };
+
+            Process.Start(startInfo);
+        }
+
         private void AddRdpItem(object sender, RoutedEventArgs e)
         {
+            _initialState = GetApplicationState();
             //get the parent treeviewitem
             FolderTreeViewItem folderItem = null;
             var item = rdpTree.SelectedItem;
@@ -177,20 +184,16 @@ namespace RDerP
                 {
                     FileHelper.GenerateRdpFile(filePath, host);
 
-                    var newRdpItem = CreateRdpItem(name, filePath);
-
                     if (folderItem != null)
                     {
-                        folderItem.Items.Add(newRdpItem);
-                        folderItem.Items.Refresh();
+                        folderItem.Items.Clear();
+                        AddChildren(folderItem);
                     }
                     else
                     {
-                        rdpTree.Items.Add(newRdpItem);
-                        rdpTree.Items.Refresh();
+                        rdpTree.Items.Clear();
+                        AddRootToTreeView();
                     }
-                    
-                    _root = new DirectoryModel(_executingDirectory);
 
                     LaunchRDPEdit(filePath);
                 }
@@ -216,7 +219,7 @@ namespace RDerP
             }
             catch
             {
-                //swallow the shit out of this bad boy
+                //swallow the shit out of this bad boy - nobody likes seeing errors on close
             }
 
             base.OnClosing(e);
@@ -224,9 +227,13 @@ namespace RDerP
 
         private void SaveState()
         {
-            var appState = new ApplicationState {ExpandedPaths = GetExpandedFolders()};
-            var json = JsonConvert.SerializeObject(appState);
+            var json = JsonConvert.SerializeObject(GetApplicationState());
             File.WriteAllText("RDerP.json", json);
+        }
+
+        private ApplicationState GetApplicationState()
+        {
+            return new ApplicationState {ExpandedPaths = GetExpandedFolders()};
         }
 
         private IEnumerable<string> GetExpandedFolders()
