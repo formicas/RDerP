@@ -68,6 +68,7 @@
       <SubType>Designer</SubType>
     </ApplicationDefinition>
     <Compile Include="IO\FileHelper.cs" />
+    <Compile Include="ItemType.cs" />
     <Compile Include="MandatoryRule.cs" />
     <Compile Include="Models\ApplicationState.cs" />
     <Compile Include="Properties\Annotations.cs" />

@@ -29,7 +29,7 @@
                 </Binding>
             </TextBox.Text>
         </TextBox>
-        <Label x:Name="label1" Content="Host" Grid.Column="0" Grid.Row="1" VerticalAlignment="Center"/>
+        <Label x:Name="hostLabel" Content="Host" Grid.Column="0" Grid.Row="1" VerticalAlignment="Center"/>
         <TextBox x:Name="hostInput" Grid.Column="1" Grid.ColumnSpan="3" Grid.Row="1" VerticalAlignment="Center" Width="180" Margin="0,0,5,0">
             <TextBox.Text>
                 <Binding Path="Host" RelativeSource="{RelativeSource Mode=FindAncestor,AncestorType=Window}" UpdateSourceTrigger="PropertyChanged">

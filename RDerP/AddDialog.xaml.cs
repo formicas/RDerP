@@ -20,51 +20,36 @@ namespace RDerP
 
         private bool _autoGenHost = true;
         private readonly string _path;
+        private readonly ItemType _type;
 
-        public AddDialog(string path)
+        private bool ShowHost => _type == ItemType.Rdp;
+
+        public AddDialog(string path, ItemType type = ItemType.Rdp)
         {
             _path = path;
+            _type = type;
+            
             InitializeComponent();
+            hostInput.Visibility = ShowHost ? Visibility.Visible : Visibility.Collapsed;
+            hostLabel.Visibility = hostInput.Visibility;
+
             nameInput.Focus();
 
-            nameInput.TextChanged += (sender, e) =>
+            if (ShowHost)
             {
-                if (_autoGenHost)
+                nameInput.TextChanged += (sender, e) =>
                 {
-                    hostInput.Text = nameInput.Text;
-                }
-            };
+                    if (_autoGenHost)
+                    {
+                        hostInput.Text = nameInput.Text;
+                    }
+                };
 
-            hostInput.GotFocus += (sender, e) =>
-            {
-                _autoGenHost = false;
-            };
-            
-            //PreviewKeyDown += (sender, e) =>
-            //{
-            //    var canClose = false;
-            //    switch (e.Key)
-            //    {
-            //        case Key.Escape:
-            //            DialogResult = false;
-            //            canClose = true;
-            //            break;
-            //        case Key.Enter:
-            //            e.SuppressKeyPress = true;
-            //            if (Validate())
-            //            {
-            //                DialogResult = true;
-            //                canClose = true;
-            //            }
-            //            break;
-                        
-            //    }
-
-            //    if (canClose)
-            //    {
-            //        Close();
-            //    }
-            //};
+                hostInput.GotFocus += (sender, e) =>
+                {
+                    _autoGenHost = false;
+                };
+            }
         }
 
         private bool Validate()
@@ -75,7 +60,7 @@ namespace RDerP
                 errorBuilder.AppendLine("Please enter a name.");
             }
 
-            if (string.IsNullOrWhiteSpace(Host))
+            if (ShowHost && string.IsNullOrWhiteSpace(Host))
             {
                 errorBuilder.AppendLine("Please enter a host.");
             }

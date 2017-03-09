@@ -146,6 +146,78 @@ namespace RDerP
         {
             _initialState = GetApplicationState();
             //get the parent treeviewitem
+            var folderItem = GetCurrentParent();
+
+            var directoryPath = folderItem != null ? folderItem.Path : _executingDirectory;
+
+            var dialog = new AddDialog(directoryPath);
+
+            SetDialogPosition(dialog, add);
+
+            var result = dialog.ShowDialog();
+            if (result.HasValue && result.Value)
+            {
+                var name = dialog.NewName;
+                var host = dialog.Host;
+
+
+                var filePath = Path.Combine(directoryPath, $"{name}.rdp");
+
+                FileHelper.GenerateRdpFile(filePath, host);
+
+                if (folderItem != null)
+                {
+                    folderItem.Items.Clear();
+                    AddChildren(folderItem);
+                }
+                else
+                {
+                    rdpTree.Items.Clear();
+                    AddRootToTreeView();
+                }
+
+                LaunchRDPEdit(filePath);
+            }
+        }
+
+        private void AddFolder(object sender, RoutedEventArgs e)
+        {
+            _initialState = GetApplicationState();
+
+            //get the parent treeviewitem
+            var folderItem = GetCurrentParent();
+
+            var directoryPath = folderItem != null ? folderItem.Path : _executingDirectory;
+
+            var dialog = new AddDialog(directoryPath, ItemType.Folder);
+
+            //todo reference to button
+            SetDialogPosition(dialog, addFolder);
+
+            var result = dialog.ShowDialog();
+            if (result.HasValue && result.Value)
+            {
+                var name = dialog.NewName;
+
+                var filePath = Path.Combine(directoryPath, name);
+
+                Directory.CreateDirectory(filePath);
+                
+                if (folderItem != null)
+                {
+                    folderItem.Items.Clear();
+                    AddChildren(folderItem);
+                }
+                else
+                {
+                    rdpTree.Items.Clear();
+                    AddRootToTreeView();
+                }
+            }
+        }
+
+        private FolderTreeViewItem GetCurrentParent()
+        {
             FolderTreeViewItem folderItem = null;
             var item = rdpTree.SelectedItem;
             if (item != null)
@@ -161,47 +233,16 @@ namespace RDerP
                 }
             }
 
-            var directoryPath = folderItem != null ? folderItem.Path : _executingDirectory;
+            return folderItem;
+        }
 
-            var dialog = new AddDialog(directoryPath);
-
-            var addLocation = GetElementPoint(add);
+        private void SetDialogPosition(AddDialog dialog, Button button)
+        {
+            var buttonLocation = GetElementPoint(button);
             dialog.Owner = this;
-            dialog.Left = Left + addLocation.X + add.ActualWidth + 7;
+            dialog.Left = Left + buttonLocation.X + button.ActualWidth + 7;
 
-            dialog.Top = Top + addLocation.Y + HORRIBLE_CONSTANT;
-
-            var result = dialog.ShowDialog();
-            if (result.HasValue&&result.Value)
-            {
-                var name = dialog.NewName;
-                var host = dialog.Host;
-
-
-                var filePath = Path.Combine(directoryPath, $"{name}.rdp");
-
-                if (!File.Exists(filePath))
-                {
-                    FileHelper.GenerateRdpFile(filePath, host);
-
-                    if (folderItem != null)
-                    {
-                        folderItem.Items.Clear();
-                        AddChildren(folderItem);
-                    }
-                    else
-                    {
-                        rdpTree.Items.Clear();
-                        AddRootToTreeView();
-                    }
-
-                    LaunchRDPEdit(filePath);
-                }
-                else
-                {
-                    //todo handle
-                }
-            }
+            dialog.Top = Top + buttonLocation.Y + HORRIBLE_CONSTANT;
         }
 
         private Point GetElementPoint(Visual element)
