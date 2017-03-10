@@ -1,12 +1,8 @@
 ﻿using System;
-using System.ComponentModel;
 using System.IO;
-using System.Runtime.CompilerServices;
 using System.Text;
 using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Input;
-using RDerP.Annotations;
+using RDerP.IO;
 
 namespace RDerP
 {
@@ -15,8 +11,11 @@ namespace RDerP
     /// </summary>
     public partial class AddDialog
     {
+        private const string ERROR_MESSAGE_TITLE = "I'm afraid I can't do that";
+
         public string NewName { get; set; }
         public string Host { get; set; }
+        public string FullPath { get; set; }
 
         private bool _autoGenHost = true;
         private readonly string _path;
@@ -67,24 +66,53 @@ namespace RDerP
             var error = errorBuilder.ToString();
             if (!string.IsNullOrEmpty(error))
             {
-                MessageBox.Show(this, error, "I'm afraid I can't do that");
+                MessageBox.Show(this, error, ERROR_MESSAGE_TITLE);
                 return false;
             }
 
-            var filePath = Path.Combine(_path, $"{NewName}.rdp");
-            if (File.Exists(filePath))
+            if (ShowHost)
             {
-                MessageBox.Show(this, $"{NewName} already exists", "I'm afraid I can't do that");
-                return false;
+                FullPath = Path.Combine(_path, $"{NewName}.rdp");
+                if (File.Exists(FullPath))
+                {
+                    MessageBox.Show(this, $"{NewName} already exists.", ERROR_MESSAGE_TITLE);
+                    return false;
+                }
             }
-
+            else
+            {
+                FullPath = Path.Combine(_path, NewName);
+                if (Directory.Exists(FullPath))
+                {
+                    MessageBox.Show(this, $"{NewName} already exists.", ERROR_MESSAGE_TITLE);
+                    return false;
+                }
+            }
             return true;
         }
 
         private void  btnOk_Click(object sender, RoutedEventArgs e)
         {
             if (Validate())
+            {
+                try
+                {
+                    if (ShowHost)
+                    {
+                        FileHelper.GenerateRdpFile(FullPath, Host);
+                    }
+                    else
+                    {
+                        Directory.CreateDirectory(FullPath);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show(this, $"Error creating {(ShowHost ? "file" : "directory")}. See Event Logs for details.", ERROR_MESSAGE_TITLE);
+                    return;
+                }
                 DialogResult = true;
+            }
         }
 
         private void btnCancel_Click(object sender, RoutedEventArgs e)

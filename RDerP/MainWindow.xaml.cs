@@ -10,7 +10,6 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using Newtonsoft.Json;
-using RDerP.IO;
 using RDerP.Models;
 using RDerP.ViewModels;
 
@@ -36,6 +35,74 @@ namespace RDerP
             _executingDirectory = Directory.GetCurrentDirectory();
 
             AddRootToTreeView();
+
+            var watcher = new FileSystemWatcher(_executingDirectory)
+            {
+                IncludeSubdirectories = true
+            };
+
+            watcher.Created += FileSystemChange;
+            watcher.Renamed += FileSystemChange;
+            watcher.Deleted += FileSystemChange;
+
+            watcher.EnableRaisingEvents = true;
+        }
+
+        private void FileSystemChange(object sender, FileSystemEventArgs e)
+        {
+            Dispatcher.Invoke(() =>
+            {
+                var fullPath = e.FullPath;
+
+                //on deletion we can't differentiate between a directory path or a file path with no extension
+                //just have to assume it's relevant and force a refresh
+                if (e.ChangeType != WatcherChangeTypes.Deleted)
+                {
+                    var attributes = File.GetAttributes(fullPath);
+                    //if the change isn't to a directory or .rdp file, ignore it.
+                    if ((attributes & FileAttributes.Directory) != FileAttributes.Directory &&
+                        !fullPath.EndsWith(".rdp", StringComparison.OrdinalIgnoreCase))
+                    {
+                        return;
+                    }
+                }
+
+                var parent = Directory.GetParent(fullPath).FullName;
+
+                if (parent == _executingDirectory)
+                {
+                    rdpTree.Items.Clear();
+                    AddRootToTreeView();
+                    return;
+                }
+
+                var folderItem = GetFolderItemForPath(parent);
+
+                if (folderItem != null)
+                {
+                    folderItem.Items.Clear();
+                    AddChildren(folderItem);
+                }
+            });
+        }
+
+        private FolderTreeViewItem GetFolderItemForPath(string path)
+        {
+            var parent = Directory.GetParent(path).FullName;
+
+            if (parent == _executingDirectory)
+            {
+                return rdpTree.Items.Cast<TreeViewItem>().OfType<FolderTreeViewItem>().FirstOrDefault(i => i.Path == path);
+            }
+
+            var parentItem = GetFolderItemForPath(parent);
+
+            if (parentItem != null)
+            {
+                return parentItem.Items.Cast<TreeViewItem>().OfType<FolderTreeViewItem>().FirstOrDefault(i => i.Path == path);
+            }
+
+            return null;
         }
 
         private void AddRootToTreeView()
@@ -157,26 +224,7 @@ namespace RDerP
             var result = dialog.ShowDialog();
             if (result.HasValue && result.Value)
             {
-                var name = dialog.NewName;
-                var host = dialog.Host;
-
-
-                var filePath = Path.Combine(directoryPath, $"{name}.rdp");
-
-                FileHelper.GenerateRdpFile(filePath, host);
-
-                if (folderItem != null)
-                {
-                    folderItem.Items.Clear();
-                    AddChildren(folderItem);
-                }
-                else
-                {
-                    rdpTree.Items.Clear();
-                    AddRootToTreeView();
-                }
-
-                LaunchRDPEdit(filePath);
+                LaunchRDPEdit(dialog.FullPath);
             }
         }
 
@@ -191,29 +239,9 @@ namespace RDerP
 
             var dialog = new AddDialog(directoryPath, ItemType.Folder);
 
-            //todo reference to button
             SetDialogPosition(dialog, addFolder);
 
-            var result = dialog.ShowDialog();
-            if (result.HasValue && result.Value)
-            {
-                var name = dialog.NewName;
-
-                var filePath = Path.Combine(directoryPath, name);
-
-                Directory.CreateDirectory(filePath);
-                
-                if (folderItem != null)
-                {
-                    folderItem.Items.Clear();
-                    AddChildren(folderItem);
-                }
-                else
-                {
-                    rdpTree.Items.Clear();
-                    AddRootToTreeView();
-                }
-            }
+            dialog.ShowDialog();
         }
 
         private FolderTreeViewItem GetCurrentParent()
