@@ -1,16 +1,14 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
 using System.Windows.Media;
 using Newtonsoft.Json;
 using RDerP.IO;
 using RDerP.Models;
-using RDerP.ViewModels;
 
 namespace RDerP
 {
@@ -117,6 +115,18 @@ namespace RDerP
             SetDialogPosition(dialog, addFolder);
 
             dialog.ShowDialog();
+        }
+
+        private void TreeView_MouseUp(object sender, MouseButtonEventArgs e)
+        {
+            //should probably make this nicer but for now it works
+            //if we detect a click which isn't on an item, deselect the currently selected item
+            if (e.OriginalSource is Grid)
+            {
+                var item = rdpTree.SelectedItem as TreeViewItem;
+                if (item != null)
+                    item.IsSelected = false;
+            }
         }
 
         protected override void OnClosing(CancelEventArgs e)
