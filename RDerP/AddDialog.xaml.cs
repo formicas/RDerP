@@ -11,8 +11,6 @@ namespace RDerP
     /// </summary>
     public partial class AddDialog
     {
-        private const string ERROR_MESSAGE_TITLE = "I'm afraid I can't do that";
-
         public string NewName { get; set; }
         public string Host { get; set; }
         public string FullPath { get; set; }
@@ -66,7 +64,7 @@ namespace RDerP
             var error = errorBuilder.ToString();
             if (!string.IsNullOrEmpty(error))
             {
-                MessageBox.Show(this, error, ERROR_MESSAGE_TITLE);
+                MessageBox.Show(this, error, Constants.ErrorMessageTitle);
                 return false;
             }
 
@@ -75,7 +73,7 @@ namespace RDerP
                 FullPath = Path.Combine(_path, $"{NewName}.rdp");
                 if (File.Exists(FullPath))
                 {
-                    MessageBox.Show(this, $"{NewName} already exists.", ERROR_MESSAGE_TITLE);
+                    MessageBox.Show(this, $"{NewName} already exists.", Constants.ErrorMessageTitle);
                     return false;
                 }
             }
@@ -84,7 +82,7 @@ namespace RDerP
                 FullPath = Path.Combine(_path, NewName);
                 if (Directory.Exists(FullPath))
                 {
-                    MessageBox.Show(this, $"{NewName} already exists.", ERROR_MESSAGE_TITLE);
+                    MessageBox.Show(this, $"{NewName} already exists.", Constants.ErrorMessageTitle);
                     return false;
                 }
             }
@@ -108,7 +106,7 @@ namespace RDerP
                 }
                 catch (Exception ex)
                 {
-                    MessageBox.Show(this, $"Error creating {(ShowHost ? "file" : "directory")}. See Event Logs for details.", ERROR_MESSAGE_TITLE);
+                    MessageBox.Show(this, $"Error creating {(ShowHost ? "file" : "directory")}. See Event Logs for details.", Constants.ErrorMessageTitle);
                     return;
                 }
                 DialogResult = true;

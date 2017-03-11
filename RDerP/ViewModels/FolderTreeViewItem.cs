@@ -3,7 +3,7 @@ using System.Windows.Controls;
 
 namespace RDerP.ViewModels
 {
-    class FolderTreeViewItem : TreeViewItem
+    public class FolderTreeViewItem : TreeViewItem
     {
         public string Path { get; }
 

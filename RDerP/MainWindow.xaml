@@ -45,6 +45,17 @@
                 </StackPanel>
             </Button>
         </Grid>
-        <TreeView x:Name="rdpTree" Height="Auto" Width="Auto" Margin="10" DockPanel.Dock="Bottom"/>
+        <TreeView x:Name="rdpTree" Height="Auto" Width="Auto" Margin="10" DockPanel.Dock="Bottom">
+            <TreeView.Resources>
+                <SolidColorBrush x:Key="{x:Static SystemColors.HighlightBrushKey}"
+                      Color="Gray" />
+                <SolidColorBrush x:Key="{x:Static SystemColors.HighlightTextBrushKey}"
+                      Color="Gray" />
+                <SolidColorBrush x:Key="{x:Static SystemColors.InactiveSelectionHighlightBrushKey}"
+                      Color="Gray" />
+                <SolidColorBrush x:Key="{x:Static SystemColors.InactiveSelectionHighlightTextBrushKey}"
+                      Color="Gray" />
+            </TreeView.Resources>
+        </TreeView>
     </DockPanel>
 </Window>

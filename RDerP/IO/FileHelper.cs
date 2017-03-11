@@ -1,4 +1,6 @@
 ﻿using System.IO;
+using Newtonsoft.Json;
+using RDerP.Models;
 
 namespace RDerP.IO
 {
@@ -8,6 +10,12 @@ namespace RDerP.IO
         {
             var content = $"full address:s:{host}";
             File.WriteAllText(path, content);
+        }
+
+        public static void SaveState(ApplicationState appState)
+        {
+            var json = JsonConvert.SerializeObject(appState);
+            File.WriteAllText("RDerP.json", json);
         }
     }
 }

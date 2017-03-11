@@ -67,6 +67,8 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="Constants.cs" />
+    <Compile Include="TreeViewManager.cs" />
     <Compile Include="IO\FileHelper.cs" />
     <Compile Include="ItemType.cs" />
     <Compile Include="MandatoryRule.cs" />

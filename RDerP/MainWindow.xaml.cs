@@ -6,10 +6,9 @@ using System.IO;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Input;
 using System.Windows.Media;
-using System.Windows.Media.Imaging;
 using Newtonsoft.Json;
+using RDerP.IO;
 using RDerP.Models;
 using RDerP.ViewModels;
 
@@ -22,9 +21,9 @@ namespace RDerP
     {
         //the extra height from the title bar that's not factored into any height calculations
         private const int HORRIBLE_CONSTANT = 30;
-        private const string MSTSC = "mstsc.exe";
         private readonly string _executingDirectory;
         private ApplicationState _initialState;
+        private readonly TreeViewManager _treeViewManager;
 
         public MainWindow()
         {
@@ -33,8 +32,9 @@ namespace RDerP
             _initialState = LoadApplicationState();
 
             _executingDirectory = Directory.GetCurrentDirectory();
+            _treeViewManager = new TreeViewManager(rdpTree, _executingDirectory);
 
-            AddRootToTreeView();
+            _treeViewManager.AddRootToTreeView(_initialState);
 
             var watcher = new FileSystemWatcher(_executingDirectory)
             {
@@ -71,149 +71,24 @@ namespace RDerP
 
                 if (parent == _executingDirectory)
                 {
-                    rdpTree.Items.Clear();
-                    AddRootToTreeView();
+                    _treeViewManager.AddRootToTreeView(_initialState);
                     return;
                 }
 
-                var folderItem = GetFolderItemForPath(parent);
+                var folderItem = _treeViewManager.GetFolderItemForPath(parent);
 
                 if (folderItem != null)
                 {
-                    folderItem.Items.Clear();
-                    AddChildren(folderItem);
+                    _treeViewManager.AddChildren(folderItem, _initialState);
                 }
             });
-        }
-
-        private FolderTreeViewItem GetFolderItemForPath(string path)
-        {
-            var parent = Directory.GetParent(path).FullName;
-
-            if (parent == _executingDirectory)
-            {
-                return rdpTree.Items.Cast<TreeViewItem>().OfType<FolderTreeViewItem>().FirstOrDefault(i => i.Path == path);
-            }
-
-            var parentItem = GetFolderItemForPath(parent);
-
-            if (parentItem != null)
-            {
-                return parentItem.Items.Cast<TreeViewItem>().OfType<FolderTreeViewItem>().FirstOrDefault(i => i.Path == path);
-            }
-
-            return null;
-        }
-
-        private void AddRootToTreeView()
-        {
-            var subDirPaths = Directory.GetDirectories(_executingDirectory);
-
-            foreach (var sub in subDirPaths)
-            {
-                var folderItem = new FolderTreeViewItem(CreateDirectoryHeader(Path.GetFileName(sub)), sub)
-                {
-                    IsExpanded = _initialState.ExpandedPaths.Contains(sub)
-                };
-                rdpTree.Items.Add(folderItem);
-                AddChildren(folderItem);
-            }
-
-            var filePaths = Directory.GetFiles(_executingDirectory, "*.rdp");
-
-            foreach (var filePath in filePaths)
-            {
-                rdpTree.Items.Add(CreateRdpItem(filePath));
-            }
-        }
-
-        private void AddChildren(FolderTreeViewItem parent)
-        {
-            var dirPath = parent.Path;
-            
-            var subDirPaths = Directory.GetDirectories(dirPath);
-            foreach (var sub in subDirPaths)
-            {
-                var newItem = new FolderTreeViewItem(CreateDirectoryHeader(Path.GetFileName(sub)), sub)
-                {
-                    IsExpanded = _initialState.ExpandedPaths.Contains(sub)
-                };
-                parent.Items.Add(newItem);
-                AddChildren(newItem);
-            }
-
-            var filePaths = Directory.GetFiles(dirPath, "*.rdp");
-            foreach(var filePath in filePaths)
-            {
-                parent.Items.Add(CreateRdpItem(filePath));
-            }
-        }
-
-        private RdpTreeViewItem CreateRdpItem(string path)
-        {
-            var name = Path.GetFileName(path)?.Replace(".rdp", "");
-            var item = new RdpTreeViewItem(CreateRdpHeader(name), path);
-            item.MouseDoubleClick += OnRdpDoubleClick;
-            return item;
-        }
-
-        private StackPanel CreateDirectoryHeader(string name)
-        {
-            return CreateHeader(name, Properties.Resources.FolderIcon);
-        }
-
-        private StackPanel CreateRdpHeader(string name)
-        {
-            return CreateHeader(name, Properties.Resources.TerminalIcon);
-        }
-
-        private StackPanel CreateHeader(string name, string imagePath)
-        {
-            var image = new Image {Source = new BitmapImage(new Uri(imagePath))};
-            var label = new Label {Content = name};
-
-            var stack = new StackPanel {Orientation = Orientation.Horizontal};
-
-            stack.Children.Add(image);
-            stack.Children.Add(label);
-
-            return stack;
-        }
-
-        private void OnRdpDoubleClick(object sender, MouseButtonEventArgs args)
-        {
-            var rdpItem = sender as RdpTreeViewItem;
-            if (rdpItem == null) return;
-
-            LaunchRDPSession(rdpItem.Path);
-        }
-
-        private void LaunchRDPSession(string path)
-        {
-            var startInfo = new ProcessStartInfo
-            {
-                FileName = MSTSC,
-                Arguments = $"\"{path}\""
-            };
-            Process.Start(startInfo);
-        }
-
-        private void LaunchRDPEdit(string path)
-        {
-            var startInfo = new ProcessStartInfo
-            {
-                FileName = MSTSC,
-                Arguments = $"/edit \"{path}\""
-            };
-
-            Process.Start(startInfo);
         }
 
         private void AddRdpItem(object sender, RoutedEventArgs e)
         {
             _initialState = GetApplicationState();
             //get the parent treeviewitem
-            var folderItem = GetCurrentParent();
+            var folderItem = _treeViewManager.GetCurrentParent();
 
             var directoryPath = folderItem != null ? folderItem.Path : _executingDirectory;
 
@@ -233,7 +108,7 @@ namespace RDerP
             _initialState = GetApplicationState();
 
             //get the parent treeviewitem
-            var folderItem = GetCurrentParent();
+            var folderItem = _treeViewManager.GetCurrentParent();
 
             var directoryPath = folderItem != null ? folderItem.Path : _executingDirectory;
 
@@ -244,24 +119,31 @@ namespace RDerP
             dialog.ShowDialog();
         }
 
-        private FolderTreeViewItem GetCurrentParent()
+        protected override void OnClosing(CancelEventArgs e)
         {
-            FolderTreeViewItem folderItem = null;
-            var item = rdpTree.SelectedItem;
-            if (item != null)
+            //on close, we want to find all the expanded folders and write them to our 'persistence' file
+            try
             {
-                var rdpItem = item as RdpTreeViewItem;
-                if (rdpItem != null)
-                {
-                    folderItem = rdpItem.Parent as FolderTreeViewItem;
-                }
-                else
-                {
-                    folderItem = item as FolderTreeViewItem;
-                }
+                FileHelper.SaveState(GetApplicationState());
+            }
+            catch
+            {
+                //todo write to event log
+                //swallow the shit out of this bad boy - nobody likes seeing errors on close
             }
 
-            return folderItem;
+            base.OnClosing(e);
+        }
+
+        private void LaunchRDPEdit(string path)
+        {
+            var startInfo = new ProcessStartInfo
+            {
+                FileName = Constants.Mstsc,
+                Arguments = $"/edit \"{path}\""
+            };
+
+            Process.Start(startInfo);
         }
 
         private void SetDialogPosition(AddDialog dialog, Button button)
@@ -279,61 +161,9 @@ namespace RDerP
                 .Transform(new Point(0, 0));
         }
 
-        protected override void OnClosing(CancelEventArgs e)
-        {
-            //on close, we want to find all the expanded folders and write them to our 'persistence' file
-            try
-            {
-                SaveState();
-            }
-            catch
-            {
-                //swallow the shit out of this bad boy - nobody likes seeing errors on close
-            }
-
-            base.OnClosing(e);
-        }
-
-        private void SaveState()
-        {
-            var json = JsonConvert.SerializeObject(GetApplicationState());
-            File.WriteAllText("RDerP.json", json);
-        }
-
         private ApplicationState GetApplicationState()
         {
-            return new ApplicationState {ExpandedPaths = GetExpandedFolders()};
-        }
-
-        private IEnumerable<string> GetExpandedFolders()
-        {
-            var folders = new List<string>();
-            GetExpandedFolders(null, folders);
-            return folders;
-        }
-
-        private void GetExpandedFolders(FolderTreeViewItem item, IList<string> folders)
-        {
-            IEnumerable<FolderTreeViewItem> expandedSubs;
-            if (item == null)
-            {
-                expandedSubs =
-                    rdpTree.Items.Cast<TreeViewItem>()
-                        .OfType<FolderTreeViewItem>()
-                        .Where(i => i.IsExpanded);
-            }
-            else
-            {
-                expandedSubs = item.Items.Cast<TreeViewItem>()
-                    .OfType<FolderTreeViewItem>()
-                    .Where(i => i.IsExpanded);
-            }
-
-            foreach (FolderTreeViewItem sub in expandedSubs)
-            {
-                folders.Add(sub.Path);
-                GetExpandedFolders(sub, folders);
-            }
+            return new ApplicationState {ExpandedPaths = _treeViewManager.GetExpandedFolders()};
         }
 
         private ApplicationState LoadApplicationState()
