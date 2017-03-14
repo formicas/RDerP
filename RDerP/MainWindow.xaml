@@ -45,7 +45,13 @@
                 </StackPanel>
             </Button>
         </Grid>
-        <TreeView x:Name="rdpTree" Height="Auto" Width="Auto" Margin="10" DockPanel.Dock="Bottom" MouseUp="TreeView_MouseUp">
+        <TreeView x:Name="rdpTree" Height="Auto" Width="Auto" Margin="10" DockPanel.Dock="Bottom" 
+                  MouseUp="TreeView_MouseUp"
+                  PreviewMouseLeftButtonDown="TreeView_PreviewMouseLeftButtonDown"
+                  PreviewMouseMove="TreeView_PreviewMouseMove"
+                  Drop="TreeView_Drop"
+                  DragEnter="TreeView_DragEnter"
+                  AllowDrop="true">
             <TreeView.Resources>
                 <SolidColorBrush x:Key="{x:Static SystemColors.HighlightBrushKey}"
                       Color="Gray" />

@@ -136,10 +136,9 @@ namespace RDerP
             Process.Start(startInfo);
         }
 
-        public FolderTreeViewItem GetCurrentParent()
+        public FolderTreeViewItem GetParent(TreeViewItem item)
         {
             FolderTreeViewItem folderItem = null;
-            var item = _treeView.SelectedItem;
             if (item != null)
             {
                 var rdpItem = item as RdpTreeViewItem;

@@ -9,6 +9,7 @@ using System.Windows.Media;
 using Newtonsoft.Json;
 using RDerP.IO;
 using RDerP.Models;
+using RDerP.ViewModels;
 
 namespace RDerP
 {
@@ -20,19 +21,17 @@ namespace RDerP
         //the extra height from the title bar that's not factored into any height calculations
         private const int HORRIBLE_CONSTANT = 30;
         private readonly string _executingDirectory;
-        private ApplicationState _initialState;
         private readonly TreeViewManager _treeViewManager;
+        private Point _dragStart;
 
         public MainWindow()
         {
             InitializeComponent();
 
-            _initialState = LoadApplicationState();
-
             _executingDirectory = Directory.GetCurrentDirectory();
             _treeViewManager = new TreeViewManager(rdpTree, _executingDirectory);
 
-            _treeViewManager.AddRootToTreeView(_initialState);
+            _treeViewManager.AddRootToTreeView(LoadApplicationState());
 
             var watcher = new FileSystemWatcher(_executingDirectory)
             {
@@ -69,7 +68,7 @@ namespace RDerP
 
                 if (parent == _executingDirectory)
                 {
-                    _treeViewManager.AddRootToTreeView(_initialState);
+                    _treeViewManager.AddRootToTreeView(GetApplicationState());
                     return;
                 }
 
@@ -77,16 +76,15 @@ namespace RDerP
 
                 if (folderItem != null)
                 {
-                    _treeViewManager.AddChildren(folderItem, _initialState);
+                    _treeViewManager.AddChildren(folderItem, GetApplicationState());
                 }
             });
         }
 
         private void AddRdpItem(object sender, RoutedEventArgs e)
         {
-            _initialState = GetApplicationState();
             //get the parent treeviewitem
-            var folderItem = _treeViewManager.GetCurrentParent();
+            var folderItem = _treeViewManager.GetParent(rdpTree.SelectedItem as TreeViewItem);
 
             var directoryPath = folderItem != null ? folderItem.Path : _executingDirectory;
 
@@ -103,10 +101,8 @@ namespace RDerP
 
         private void AddFolder(object sender, RoutedEventArgs e)
         {
-            _initialState = GetApplicationState();
-
             //get the parent treeviewitem
-            var folderItem = _treeViewManager.GetCurrentParent();
+            var folderItem = _treeViewManager.GetParent(rdpTree.SelectedItem as TreeViewItem);
 
             var directoryPath = folderItem != null ? folderItem.Path : _executingDirectory;
 
@@ -121,11 +117,121 @@ namespace RDerP
         {
             //should probably make this nicer but for now it works
             //if we detect a click which isn't on an item, deselect the currently selected item
-            if (e.OriginalSource is Grid)
+            var treeViewItem = FindTreeViewAncestor(e.OriginalSource as DependencyObject);
+            if (treeViewItem == null)
             {
                 var item = rdpTree.SelectedItem as TreeViewItem;
                 if (item != null)
                     item.IsSelected = false;
+            }
+        }
+
+        private void TreeView_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+        {
+            _dragStart = e.GetPosition(null);
+        }
+
+        private void TreeView_PreviewMouseMove(object sender, MouseEventArgs e)
+        {
+            if (e.LeftButton != MouseButtonState.Pressed)
+            {
+                return;
+            }
+
+            var current = e.GetPosition(null);
+            var diff = _dragStart - current;
+
+            if (Math.Abs(diff.X) > SystemParameters.MinimumHorizontalDragDistance ||
+                Math.Abs(diff.Y) > SystemParameters.MinimumVerticalDragDistance)
+            {
+                var treeView = sender as TreeView;
+                var treeViewItem = FindTreeViewAncestor(e.OriginalSource as DependencyObject);
+
+                if (treeViewItem == null || treeView == null)
+                    return;
+
+                //DataObject dragData;
+                //var draggedFolder = rdpTree.SelectedItem as FolderTreeViewItem;
+                //var draggedRdp = rdpTree.SelectedItem as RdpTreeViewItem;
+                //if (draggedFolder != null)
+                //{
+                //    dragData = new DataObject(draggedFolder);
+                //}
+                //else if (draggedRdp != null)
+                //{
+                //    dragData = new DataObject(draggedRdp);
+                //}
+                //else
+                //{
+                //    return;
+                //}
+                var item = rdpTree.SelectedItem as TreeViewItem;
+                if (item == null)
+                {
+                    return;
+                }
+                var dragData = new DataObject(item);
+                DragDrop.DoDragDrop(treeViewItem, dragData, DragDropEffects.Move);
+            }
+        }
+
+        private void TreeView_DragEnter(object sender, DragEventArgs e)
+        {
+            if (!e.Data.GetDataPresent(typeof(TreeViewItem)))
+            {
+                e.Effects = DragDropEffects.None;
+            }
+        }
+
+        private void TreeView_Drop(object sender, DragEventArgs e)
+        {
+            var oldPath = string.Empty;
+            if (e.Data.GetDataPresent(typeof(FolderTreeViewItem)) &&
+                e.Data.GetData(typeof(FolderTreeViewItem)) is FolderTreeViewItem folderItem)
+            {
+                oldPath = folderItem.Path;
+            }else if (e.Data.GetDataPresent(typeof(RdpTreeViewItem)) &&
+                      e.Data.GetData(typeof(RdpTreeViewItem)) is RdpTreeViewItem rdpItem)
+            {
+                oldPath = rdpItem.Path;
+            }
+
+            if (string.IsNullOrEmpty(oldPath))
+            {
+                return;
+            }
+
+            var targetTreeViewItem = FindTreeViewAncestor(e.OriginalSource as DependencyObject);
+
+            var newParentPath = string.Empty;
+            if (targetTreeViewItem != null)
+            {
+                var newParent = _treeViewManager.GetParent(targetTreeViewItem);
+                newParentPath = newParent?.Path ?? _executingDirectory;
+            }else if (sender is TreeView)
+            {
+                newParentPath = _executingDirectory;
+            }
+
+            if (string.IsNullOrEmpty(newParentPath))
+            {
+                return;
+            }
+
+            var newPath = Path.Combine(newParentPath, Path.GetFileName(oldPath));
+
+            if (string.Equals(newPath, oldPath, StringComparison.OrdinalIgnoreCase))
+            {
+                return;
+            }
+
+            try
+            {
+                Directory.Move(oldPath, newPath);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(this, ex.Message, Constants.ErrorMessageTitle);
             }
         }
 
@@ -143,6 +249,18 @@ namespace RDerP
             }
 
             base.OnClosing(e);
+        }
+
+        private static TreeViewItem FindTreeViewAncestor(DependencyObject current)
+        {
+            if (current == null)
+                return null;
+
+            var treeViewItem = current as TreeViewItem;
+            if (treeViewItem != null)
+                return treeViewItem;
+
+            return FindTreeViewAncestor(VisualTreeHelper.GetParent(current));
         }
 
         private void LaunchRDPEdit(string path)
