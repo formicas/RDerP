@@ -225,6 +225,13 @@ namespace RDerP
                 return;
             }
 
+            //lets not have an error message for this. It'll just be annoying
+            if (newPath.Contains(oldPath))
+            {
+                //MessageBox.Show(this, "You can't move a folder into itself, dummy.", Constants.ErrorMessageTitle);
+                return;
+            }
+
             try
             {
                 Directory.Move(oldPath, newPath);
