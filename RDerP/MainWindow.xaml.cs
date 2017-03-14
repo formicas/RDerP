@@ -27,11 +27,14 @@ namespace RDerP
         public MainWindow()
         {
             InitializeComponent();
+            var appState = LoadApplicationState();
+
+            SetWindowDimensions(appState);
 
             _executingDirectory = Directory.GetCurrentDirectory();
             _treeViewManager = new TreeViewManager(rdpTree, _executingDirectory);
 
-            _treeViewManager.AddRootToTreeView(LoadApplicationState());
+            _treeViewManager.AddRootToTreeView(appState);
 
             var watcher = new FileSystemWatcher(_executingDirectory)
             {
@@ -298,7 +301,14 @@ namespace RDerP
 
         private ApplicationState GetApplicationState()
         {
-            return new ApplicationState {ExpandedPaths = _treeViewManager.GetExpandedFolders()};
+            return new ApplicationState
+            {
+                ExpandedPaths = _treeViewManager.GetExpandedFolders(),
+                Height = Height,
+                Width = Width,
+                Left = Left,
+                Top = Top
+            };
         }
 
         private ApplicationState LoadApplicationState()
@@ -312,6 +322,29 @@ namespace RDerP
             {
                 //if we fail we care not, just give an empty buggery back
                 return new ApplicationState();
+            }
+        }
+
+        private void SetWindowDimensions(ApplicationState appState)
+        {
+            if (appState.Height.HasValue)
+            {
+                Height = appState.Height.Value;
+            }
+
+            if (appState.Width.HasValue)
+            {
+                Width = appState.Width.Value;
+            }
+
+            if (appState.Left.HasValue)
+            {
+                Left = appState.Left.Value;
+            }
+
+            if (appState.Top.HasValue)
+            {
+                Top = appState.Top.Value;
             }
         }
     }
