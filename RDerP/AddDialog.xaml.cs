@@ -108,6 +108,7 @@ namespace RDerP
                 catch (Exception ex)
                 {
                     MessageBox.Show(this, $"Error creating {(ShowHost ? "file" : "directory")}. See Event Logs for details.", Constants.ErrorMessageTitle);
+                    Logger.LogError($"Error creating {(ShowHost ? "file" : "directory")}", ex);
                     return;
                 }
                 DialogResult = true;

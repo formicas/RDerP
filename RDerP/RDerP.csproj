@@ -68,6 +68,7 @@
       <SubType>Designer</SubType>
     </ApplicationDefinition>
     <Compile Include="Constants.cs" />
+    <Compile Include="Logger.cs" />
     <Compile Include="TreeViewManager.cs" />
     <Compile Include="IO\FileHelper.cs" />
     <Compile Include="ItemType.cs" />

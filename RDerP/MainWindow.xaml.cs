@@ -123,7 +123,7 @@ namespace RDerP
             var item = rdpTree.SelectedItem as RdpTreeViewItem;
             if (item == null)
             {
-                //todo log
+                Logger.LogWarn($"Edit clicked but no {nameof(RdpTreeViewItem)} selected.");
                 return;
             }
 
@@ -141,6 +141,7 @@ namespace RDerP
                 }
                 catch (Exception ex)
                 {
+                    Logger.LogError("Error trying to delete .rdp file", ex);
                     MessageBox.Show(this, ex.Message, Constants.ErrorMessageTitle);
                     return;
                 }
@@ -276,6 +277,7 @@ namespace RDerP
             }
             catch (Exception ex)
             {
+                Logger.LogError($"Error moving {oldPath} to {newPath}", ex);
                 MessageBox.Show(this, ex.Message, Constants.ErrorMessageTitle);
             }
         }
@@ -287,9 +289,9 @@ namespace RDerP
             {
                 FileHelper.SaveState(GetApplicationState());
             }
-            catch
+            catch(Exception ex)
             {
-                //todo write to event log
+                Logger.LogWarn("Failed to write application state", ex);
                 //swallow the shit out of this bad boy - nobody likes seeing errors on close
             }
 
@@ -353,8 +355,9 @@ namespace RDerP
                 var json = File.ReadAllText("RDerP.json");
                 return JsonConvert.DeserializeObject<ApplicationState>(json);
             }
-            catch
+            catch (Exception ex)
             {
+                Logger.LogWarn("Failed to load application state", ex);
                 //if we fail we care not, just give an empty buggery back
                 return new ApplicationState();
             }
