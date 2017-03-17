@@ -81,6 +81,8 @@ namespace RDerP
                 {
                     _treeViewManager.AddChildren(folderItem, GetApplicationState());
                 }
+
+                ToggleEditDeleteButtons();
             });
         }
 
@@ -116,6 +118,37 @@ namespace RDerP
             dialog.ShowDialog();
         }
 
+        private void Edit(object sender, RoutedEventArgs e)
+        {
+            var item = rdpTree.SelectedItem as RdpTreeViewItem;
+            if (item == null)
+            {
+                //todo log
+                return;
+            }
+
+            LaunchRDPEdit(item.Path);
+        }
+
+        private void Delete(object sender, RoutedEventArgs e)
+        {
+            var item = rdpTree.SelectedItem as RdpTreeViewItem;
+            if (item != null)
+            {
+                try
+                {
+                    File.Delete(item.Path);
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show(this, ex.Message, Constants.ErrorMessageTitle);
+                    return;
+                }
+            }
+
+            //todo handle folders
+        }
+
         private void TreeView_MouseUp(object sender, MouseButtonEventArgs e)
         {
             //should probably make this nicer but for now it works
@@ -127,6 +160,8 @@ namespace RDerP
                 if (item != null)
                     item.IsSelected = false;
             }
+
+            ToggleEditDeleteButtons();
         }
 
         private void TreeView_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
@@ -346,6 +381,13 @@ namespace RDerP
             {
                 Top = appState.Top.Value;
             }
+        }
+
+        private void ToggleEditDeleteButtons()
+        {
+            //if we have a selected item, the edit and delete buttons should be enabled
+            delete.IsEnabled = rdpTree.SelectedItem is TreeViewItem;
+            edit.IsEnabled = rdpTree.SelectedItem is RdpTreeViewItem;
         }
     }
 }

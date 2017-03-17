@@ -39,32 +39,12 @@
                 </Binding>
             </TextBox.Text>
         </TextBox>
-        <Button x:Name="btnOK" Click="btnOk_Click" IsDefault="True" Grid.Row="2" Grid.Column="2">
-            <Button.Style>
-                <Style TargetType="Button">
-                    <Setter Property="Background">
-                        <Setter.Value>White</Setter.Value>
-                    </Setter>
-                    <Setter Property="BorderBrush">
-                        <Setter.Value>Transparent</Setter.Value>
-                    </Setter>
-                </Style>
-            </Button.Style>
+        <Button x:Name="btnOK" Click="btnOk_Click" IsDefault="True" Grid.Row="2" Grid.Column="2" Style="{StaticResource RDerPButton}" Margin="0,0,1,0" IsEnabled="False">
             <StackPanel>
                 <Image Source="pack://application:,,/Images/tick.png" Width="16"></Image>
             </StackPanel>
         </Button>
-        <Button x:Name="btnCancel" Click="btnCancel_Click" IsCancel="True" Grid.Row="2" Grid.Column="3">
-            <Button.Style>
-                <Style TargetType="Button">
-                    <Setter Property="Background">
-                        <Setter.Value>White</Setter.Value>
-                    </Setter>
-                    <Setter Property="BorderBrush">
-                        <Setter.Value>Transparent</Setter.Value>
-                    </Setter>
-                </Style>
-            </Button.Style>
+        <Button x:Name="btnCancel" Click="btnCancel_Click" IsCancel="True" Grid.Row="2" Grid.Column="3" Style="{StaticResource RDerPButton}">
             <StackPanel>
                 <Image Source="pack://application:,,/Images/cross.png" Width="16"></Image>
             </StackPanel>

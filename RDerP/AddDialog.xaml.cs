@@ -36,6 +36,7 @@ namespace RDerP
             {
                 nameInput.TextChanged += (sender, e) =>
                 {
+                    btnOK.IsEnabled = !string.IsNullOrEmpty(nameInput.Text);
                     if (_autoGenHost)
                     {
                         hostInput.Text = nameInput.Text;
