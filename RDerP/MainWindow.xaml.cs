@@ -147,7 +147,20 @@ namespace RDerP
                 }
             }
 
-            //todo handle folders
+            var folderItem = rdpTree.SelectedItem as FolderTreeViewItem;
+
+            if (folderItem != null)
+            {
+                try
+                {
+                    Directory.Delete(folderItem.Path, true);
+                }
+                catch (Exception ex)
+                {
+                    Logger.LogError("Error trying to delete folder", ex);
+                    MessageBox.Show(this, ex.Message, Constants.ErrorMessageTitle);
+                }
+            }
         }
 
         private void TreeView_MouseUp(object sender, MouseButtonEventArgs e)

@@ -33,12 +33,7 @@ namespace RDerP
 
             var parentItem = GetFolderItemForPath(parent);
 
-            if (parentItem != null)
-            {
-                return parentItem.Items.Cast<TreeViewItem>().OfType<FolderTreeViewItem>().FirstOrDefault(i => i.Path == path);
-            }
-
-            return null;
+            return parentItem?.Items.Cast<TreeViewItem>().OfType<FolderTreeViewItem>().FirstOrDefault(i => i.Path == path);
         }
 
         public void AddRootToTreeView(ApplicationState appState)
@@ -55,7 +50,7 @@ namespace RDerP
                 _treeView.Items.Add(folderItem);
                 AddChildren(folderItem, appState);
             }
-
+            
             var filePaths = Directory.GetFiles(_rootDirectory, "*.rdp");
 
             foreach (var filePath in filePaths)
