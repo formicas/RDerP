@@ -32,17 +32,17 @@ namespace RDerP
 
             nameInput.Focus();
 
+            nameInput.TextChanged += (sender, e) =>
+            {
+                btnOK.IsEnabled = !string.IsNullOrEmpty(nameInput.Text);
+                if (ShowHost && _autoGenHost)
+                {
+                    hostInput.Text = nameInput.Text;
+                }
+            };
+
             if (ShowHost)
             {
-                nameInput.TextChanged += (sender, e) =>
-                {
-                    btnOK.IsEnabled = !string.IsNullOrEmpty(nameInput.Text);
-                    if (_autoGenHost)
-                    {
-                        hostInput.Text = nameInput.Text;
-                    }
-                };
-
                 hostInput.GotFocus += (sender, e) =>
                 {
                     _autoGenHost = false;
