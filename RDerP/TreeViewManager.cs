@@ -77,10 +77,10 @@ namespace RDerP
             return stack;
         }
 
-        private RdpTreeViewItem CreateRdpItem(string path)
+        private RderpTreeViewItem CreateRdpItem(string path)
         {
             var name = Path.GetFileName(path)?.Replace(".rdp", "");
-            var item = new RdpTreeViewItem(CreateRdpHeader(name), path);
+            var item = new RderpTreeViewItem(CreateRdpHeader(name), path);
             item.MouseDoubleClick += OnRdpDoubleClick;
             return item;
         }
@@ -88,6 +88,19 @@ namespace RDerP
         private StackPanel CreateRdpHeader(string name)
         {
             return CreateHeader(name, Properties.Resources.TerminalIcon);
+        }
+
+        private RderpTreeViewItem CreateLnkItem(string path)
+        {
+            var name = Path.GetFileName(path)?.Replace(".lnk", "");
+            var item = new RderpTreeViewItem(CreateLnkHeader(name), path);
+            item.MouseDoubleClick += OnLnkDoubleClick;
+            return item;
+        }
+
+        private StackPanel CreateLnkHeader(string name)
+        {
+            return CreateHeader(name, Properties.Resources.ExplorerIcon);
         }
 
         public void AddChildren(FolderTreeViewItem parent, ApplicationState appState)
@@ -111,11 +124,17 @@ namespace RDerP
             {
                 parent.Items.Add(CreateRdpItem(filePath));
             }
+
+            filePaths = Directory.GetFiles(dirPath, "*.lnk");
+            foreach(var filePath in filePaths)
+            {
+                parent.Items.Add(CreateLnkItem(filePath));
+            }
         }
 
         private void OnRdpDoubleClick(object sender, MouseButtonEventArgs args)
         {
-            var rdpItem = sender as RdpTreeViewItem;
+            var rdpItem = sender as RderpTreeViewItem;
             if (rdpItem == null) return;
 
             LaunchRDPSession(rdpItem.Path);
@@ -131,12 +150,20 @@ namespace RDerP
             Process.Start(startInfo);
         }
 
+        private void OnLnkDoubleClick(object sender, MouseButtonEventArgs args)
+        {
+            var lnkItem = sender as RderpTreeViewItem;
+            if (lnkItem == null) return;
+
+            Process.Start(lnkItem.Path);
+        }
+
         public FolderTreeViewItem GetParent(TreeViewItem item)
         {
             FolderTreeViewItem folderItem = null;
             if (item != null)
             {
-                var rdpItem = item as RdpTreeViewItem;
+                var rdpItem = item as RderpTreeViewItem;
                 if (rdpItem != null)
                 {
                     folderItem = rdpItem.Parent as FolderTreeViewItem;

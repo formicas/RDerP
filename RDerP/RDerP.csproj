@@ -43,8 +43,8 @@
     <NoWin32Manifest>true</NoWin32Manifest>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Newtonsoft.Json, Version=10.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
-      <HintPath>..\packages\Newtonsoft.Json.10.0.3\lib\net45\Newtonsoft.Json.dll</HintPath>
+    <Reference Include="Newtonsoft.Json, Version=12.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <HintPath>..\packages\Newtonsoft.Json.12.0.3\lib\net45\Newtonsoft.Json.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Data" />
@@ -75,7 +75,7 @@
     <Compile Include="Models\ApplicationState.cs" />
     <Compile Include="Properties\Annotations.cs" />
     <Compile Include="ViewModels\FolderTreeViewItem.cs" />
-    <Compile Include="ViewModels\RdpTreeViewItem.cs" />
+    <Compile Include="ViewModels\RderpTreeViewItem.cs" />
     <Compile Include="AddDialog.xaml.cs">
       <DependentUpon>AddDialog.xaml</DependentUpon>
     </Compile>
@@ -138,6 +138,9 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Images\browser.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

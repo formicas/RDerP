@@ -1,15 +1,7 @@
-﻿using System.Windows.Controls;
-
-namespace RDerP.ViewModels
+﻿namespace RDerP.ViewModels
 {
-    public class FolderTreeViewItem : TreeViewItem
+    public class FolderTreeViewItem : RderpTreeViewItem
     {
-        public string Path { get; }
-
-        public FolderTreeViewItem(object header, string path)
-        {
-            Path = path;
-            Header = header;
-        }
+        public FolderTreeViewItem(object header, string path) : base(header, path) { }
     }
 }

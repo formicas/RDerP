@@ -120,6 +120,9 @@
   <data name="AddIcon" xml:space="preserve">
     <value>pack://application:,,/Images/add.png</value>
   </data>
+  <data name="ExplorerIcon" xml:space="preserve">
+    <value>pack://application:,,/Images/browser.png</value>
+  </data>
   <data name="FolderIcon" xml:space="preserve">
     <value>pack://application:,,/Images/folder.png</value>
   </data>

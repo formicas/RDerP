@@ -3,6 +3,7 @@
     public enum ItemType
     {
         Rdp,
-        Folder
+        Folder,
+        Shortcut
     }
 }

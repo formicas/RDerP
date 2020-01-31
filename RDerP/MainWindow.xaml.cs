@@ -59,9 +59,10 @@ namespace RDerP
                 if (e.ChangeType != WatcherChangeTypes.Deleted)
                 {
                     var attributes = File.GetAttributes(fullPath);
-                    //if the change isn't to a directory or .rdp file, ignore it.
-                    if ((attributes & FileAttributes.Directory) != FileAttributes.Directory &&
-                        !fullPath.EndsWith(".rdp", StringComparison.OrdinalIgnoreCase))
+                    //if the change isn't to a directory or .rdp or .lnk file, ignore it.
+                    if (!((attributes & FileAttributes.Directory) == FileAttributes.Directory ||
+                          fullPath.EndsWith(".rdp", StringComparison.OrdinalIgnoreCase) ||
+                          fullPath.EndsWith(".lnk", StringComparison.OrdinalIgnoreCase)))
                     {
                         return;
                     }
@@ -120,10 +121,10 @@ namespace RDerP
 
         private void Edit(object sender, RoutedEventArgs e)
         {
-            var item = rdpTree.SelectedItem as RdpTreeViewItem;
+            var item = rdpTree.SelectedItem as RderpTreeViewItem;
             if (item == null)
             {
-                Logger.LogWarn($"Edit clicked but no {nameof(RdpTreeViewItem)} selected.");
+                Logger.LogWarn($"Edit clicked but no {nameof(RderpTreeViewItem)} selected.");
                 return;
             }
 
@@ -132,7 +133,7 @@ namespace RDerP
 
         private void Delete(object sender, RoutedEventArgs e)
         {
-            var item = rdpTree.SelectedItem as RdpTreeViewItem;
+            var item = rdpTree.SelectedItem as RderpTreeViewItem;
             if (item != null)
             {
                 try
@@ -202,21 +203,6 @@ namespace RDerP
                 if (treeViewItem == null || treeView == null)
                     return;
 
-                //DataObject dragData;
-                //var draggedFolder = rdpTree.SelectedItem as FolderTreeViewItem;
-                //var draggedRdp = rdpTree.SelectedItem as RdpTreeViewItem;
-                //if (draggedFolder != null)
-                //{
-                //    dragData = new DataObject(draggedFolder);
-                //}
-                //else if (draggedRdp != null)
-                //{
-                //    dragData = new DataObject(draggedRdp);
-                //}
-                //else
-                //{
-                //    return;
-                //}
                 var item = rdpTree.SelectedItem as TreeViewItem;
                 if (item == null)
                 {
@@ -242,8 +228,8 @@ namespace RDerP
                 e.Data.GetData(typeof(FolderTreeViewItem)) is FolderTreeViewItem folderItem)
             {
                 oldPath = folderItem.Path;
-            }else if (e.Data.GetDataPresent(typeof(RdpTreeViewItem)) &&
-                      e.Data.GetData(typeof(RdpTreeViewItem)) is RdpTreeViewItem rdpItem)
+            }else if (e.Data.GetDataPresent(typeof(RderpTreeViewItem)) &&
+                      e.Data.GetData(typeof(RderpTreeViewItem)) is RderpTreeViewItem rdpItem)
             {
                 oldPath = rdpItem.Path;
             }
@@ -280,7 +266,6 @@ namespace RDerP
             //lets not have an error message for this. It'll just be annoying
             if (newPath.Contains(oldPath))
             {
-                //MessageBox.Show(this, "You can't move a folder into itself, dummy.", Constants.ErrorMessageTitle);
                 return;
             }
 
@@ -403,7 +388,7 @@ namespace RDerP
         {
             //if we have a selected item, the edit and delete buttons should be enabled
             delete.IsEnabled = rdpTree.SelectedItem is TreeViewItem;
-            edit.IsEnabled = rdpTree.SelectedItem is RdpTreeViewItem;
+            edit.IsEnabled = rdpTree.SelectedItem is RderpTreeViewItem;
         }
     }
 }

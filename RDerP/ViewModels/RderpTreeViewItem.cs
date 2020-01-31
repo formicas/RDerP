@@ -2,11 +2,11 @@
 
 namespace RDerP.ViewModels
 {
-    class RdpTreeViewItem : TreeViewItem
+    public class RderpTreeViewItem : TreeViewItem
     {
         public string Path { get; }
 
-        public RdpTreeViewItem(object header, string path)
+        public RderpTreeViewItem(object header, string path)
         {
             Header = header;
             Path = path;
