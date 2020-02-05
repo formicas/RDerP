@@ -13,7 +13,7 @@ namespace RDerP.ViewModels
             FullPath = path;
         }
 
-        protected StackPanel CreateHeader(string name, string imagePath)
+        protected static StackPanel CreateHeader(string name, string imagePath)
         {
             var image = new Image { Source = new BitmapImage(new Uri(imagePath)) };
             var label = new Label { Content = name };

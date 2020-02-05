@@ -50,8 +50,7 @@ namespace RDerP
 
         private void FileSystemChange(object sender, FileSystemEventArgs e)
         {
-            // ReSharper disable once PossibleNullReferenceException
-            Dispatcher.Invoke(() =>
+            Dispatcher?.Invoke(() =>
             {
                 var fullPath = e.FullPath;
 
