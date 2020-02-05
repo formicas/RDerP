@@ -1,7 +1,13 @@
-﻿namespace RDerP.ViewModels
+﻿using System.IO;
+
+namespace RDerP.ViewModels
 {
     public class FolderTreeViewItem : RderpTreeViewItem
     {
-        public FolderTreeViewItem(object header, string path) : base(header, path) { }
+        public FolderTreeViewItem(string path) : base(path)
+        {
+            var name = Path.GetFileName(path);
+            Header = CreateHeader(name, Properties.Resources.FolderIcon);
+        }
     }
 }

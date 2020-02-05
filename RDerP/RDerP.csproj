@@ -25,6 +25,7 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -74,6 +75,8 @@
     <Compile Include="MandatoryRule.cs" />
     <Compile Include="Models\ApplicationState.cs" />
     <Compile Include="Properties\Annotations.cs" />
+    <Compile Include="ViewModels\ShortcutTreeViewItem.cs" />
+    <Compile Include="ViewModels\RdpTreeViewItem.cs" />
     <Compile Include="ViewModels\FolderTreeViewItem.cs" />
     <Compile Include="ViewModels\RderpTreeViewItem.cs" />
     <Compile Include="AddDialog.xaml.cs">

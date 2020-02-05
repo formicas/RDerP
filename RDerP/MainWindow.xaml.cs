@@ -50,6 +50,7 @@ namespace RDerP
 
         private void FileSystemChange(object sender, FileSystemEventArgs e)
         {
+            // ReSharper disable once PossibleNullReferenceException
             Dispatcher.Invoke(() =>
             {
                 var fullPath = e.FullPath;
@@ -90,9 +91,9 @@ namespace RDerP
         private void AddRdpItem(object sender, RoutedEventArgs e)
         {
             //get the parent treeviewitem
-            var folderItem = _treeViewManager.GetParent(rdpTree.SelectedItem as TreeViewItem);
+            var folderItem = _treeViewManager.GetParentFolder(rdpTree.SelectedItem as TreeViewItem);
 
-            var directoryPath = folderItem != null ? folderItem.Path : _executingDirectory;
+            var directoryPath = folderItem != null ? folderItem.FullPath : _executingDirectory;
 
             var dialog = new AddDialog(directoryPath);
 
@@ -108,9 +109,9 @@ namespace RDerP
         private void AddFolder(object sender, RoutedEventArgs e)
         {
             //get the parent treeviewitem
-            var folderItem = _treeViewManager.GetParent(rdpTree.SelectedItem as TreeViewItem);
+            var folderItem = _treeViewManager.GetParentFolder(rdpTree.SelectedItem as TreeViewItem);
 
-            var directoryPath = folderItem != null ? folderItem.Path : _executingDirectory;
+            var directoryPath = folderItem != null ? folderItem.FullPath : _executingDirectory;
 
             var dialog = new AddDialog(directoryPath, ItemType.Folder);
 
@@ -121,44 +122,42 @@ namespace RDerP
 
         private void Edit(object sender, RoutedEventArgs e)
         {
-            var item = rdpTree.SelectedItem as RderpTreeViewItem;
-            if (item == null)
+            if (!(rdpTree.SelectedItem is RdpTreeViewItem item))
             {
-                Logger.LogWarn($"Edit clicked but no {nameof(RderpTreeViewItem)} selected.");
+                Logger.LogWarn($"Edit clicked but no {nameof(RdpTreeViewItem)} selected.");
                 return;
             }
 
-            LaunchRDPEdit(item.Path);
+            LaunchRDPEdit(item.FullPath);
         }
 
         private void Delete(object sender, RoutedEventArgs e)
         {
-            var item = rdpTree.SelectedItem as RderpTreeViewItem;
-            if (item != null)
+            if (rdpTree.SelectedItem is FolderTreeViewItem folderItem)
             {
                 try
                 {
-                    File.Delete(item.Path);
-                }
-                catch (Exception ex)
-                {
-                    Logger.LogError("Error trying to delete .rdp file", ex);
-                    MessageBox.Show(this, ex.Message, Constants.ErrorMessageTitle);
-                    return;
-                }
-            }
-
-            var folderItem = rdpTree.SelectedItem as FolderTreeViewItem;
-
-            if (folderItem != null)
-            {
-                try
-                {
-                    Directory.Delete(folderItem.Path, true);
+                    Directory.Delete(folderItem.FullPath, true);
                 }
                 catch (Exception ex)
                 {
                     Logger.LogError("Error trying to delete folder", ex);
+                    MessageBox.Show(this, ex.Message, Constants.ErrorMessageTitle);
+                }
+
+                return;
+            }
+
+            //if it's not a folder, it's a something else
+            if (rdpTree.SelectedItem is RderpTreeViewItem item)
+            {
+                try
+                {
+                    File.Delete(item.FullPath);
+                }
+                catch (Exception ex)
+                {
+                    Logger.LogError("Error trying to delete .rdp file", ex);
                     MessageBox.Show(this, ex.Message, Constants.ErrorMessageTitle);
                 }
             }
@@ -227,11 +226,16 @@ namespace RDerP
             if (e.Data.GetDataPresent(typeof(FolderTreeViewItem)) &&
                 e.Data.GetData(typeof(FolderTreeViewItem)) is FolderTreeViewItem folderItem)
             {
-                oldPath = folderItem.Path;
-            }else if (e.Data.GetDataPresent(typeof(RderpTreeViewItem)) &&
-                      e.Data.GetData(typeof(RderpTreeViewItem)) is RderpTreeViewItem rdpItem)
+                oldPath = folderItem.FullPath;
+            }else if (e.Data.GetDataPresent(typeof(RdpTreeViewItem)) &&
+                      e.Data.GetData(typeof(RdpTreeViewItem)) is RdpTreeViewItem rdpItem)
             {
-                oldPath = rdpItem.Path;
+                oldPath = rdpItem.FullPath;
+            }
+            else if (e.Data.GetDataPresent(typeof(ShortcutTreeViewItem)) &&
+                     e.Data.GetData(typeof(ShortcutTreeViewItem)) is ShortcutTreeViewItem shortcutItem)
+            {
+                oldPath = shortcutItem.FullPath;
             }
 
             if (string.IsNullOrEmpty(oldPath))
@@ -244,8 +248,8 @@ namespace RDerP
             var newParentPath = string.Empty;
             if (targetTreeViewItem != null)
             {
-                var newParent = _treeViewManager.GetParent(targetTreeViewItem);
-                newParentPath = newParent?.Path ?? _executingDirectory;
+                var newParent = _treeViewManager.GetParentFolder(targetTreeViewItem);
+                newParentPath = newParent?.FullPath ?? _executingDirectory;
             }else if (sender is TreeView)
             {
                 newParentPath = _executingDirectory;
@@ -388,7 +392,7 @@ namespace RDerP
         {
             //if we have a selected item, the edit and delete buttons should be enabled
             delete.IsEnabled = rdpTree.SelectedItem is TreeViewItem;
-            edit.IsEnabled = rdpTree.SelectedItem is RderpTreeViewItem;
+            edit.IsEnabled = rdpTree.SelectedItem is RdpTreeViewItem;
         }
     }
 }
