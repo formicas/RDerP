@@ -89,7 +89,7 @@ namespace RDerP.ViewModels
             item.Pid = pid;
             item.IsActive = isActive;
             item.Header = CreateHeader(item.Name,
-                isActive ? Properties.Resources.AddIcon : Properties.Resources.TerminalIcon);
+                isActive ? Properties.Resources.TerminalConnectedIcon: Properties.Resources.TerminalIcon);
         }
 
         private static void SetExitListener(Process p, RdpTreeViewItem item)

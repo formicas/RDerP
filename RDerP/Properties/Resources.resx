@@ -126,6 +126,9 @@
   <data name="FolderIcon" xml:space="preserve">
     <value>pack://application:,,/Images/folder.png</value>
   </data>
+  <data name="TerminalConnectedIcon" xml:space="preserve">
+    <value>pack://application:,,/Images/screen_on.png</value>
+  </data>
   <data name="TerminalIcon" xml:space="preserve">
     <value>pack://application:,,/Images/screen.png</value>
   </data>

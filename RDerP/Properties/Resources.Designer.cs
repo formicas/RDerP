@@ -88,6 +88,15 @@ namespace RDerP.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to pack://application:,,/Images/screen_on.png.
+        /// </summary>
+        internal static string TerminalConnectedIcon {
+            get {
+                return ResourceManager.GetString("TerminalConnectedIcon", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to pack://application:,,/Images/screen.png.
         /// </summary>
         internal static string TerminalIcon {
