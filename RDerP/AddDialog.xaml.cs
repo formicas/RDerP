@@ -11,6 +11,8 @@ namespace RDerP
     /// </summary>
     public partial class AddDialog
     {
+        private static readonly NLog.Logger Logger = NLog.LogManager.GetCurrentClassLogger();
+
         public string NewName { get; set; }
         public string Host { get; set; }
         public string FullPath { get; set; }
@@ -108,7 +110,7 @@ namespace RDerP
                 catch (Exception ex)
                 {
                     MessageBox.Show(this, $"Error creating {(ShowHost ? "file" : "directory")}. See Event Logs for details.", Constants.ErrorMessageTitle);
-                    Logger.LogError($"Error creating {(ShowHost ? "file" : "directory")}", ex);
+                    Logger.Error(ex, $"Error creating {(ShowHost ? "file" : "directory")}");
                     return;
                 }
                 DialogResult = true;

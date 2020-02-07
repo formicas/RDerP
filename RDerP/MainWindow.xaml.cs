@@ -1,15 +1,18 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using NLog;
+using NLog.Config;
+using RDerP.IO;
+using RDerP.Models;
+using RDerP.ViewModels;
+using System;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
-using Newtonsoft.Json;
-using RDerP.IO;
-using RDerP.Models;
-using RDerP.ViewModels;
 
 namespace RDerP
 {
@@ -18,20 +21,38 @@ namespace RDerP
     /// </summary>
     public partial class MainWindow
     {
+        private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
+
         //the extra height from the title bar that's not factored into any height calculations
         private const int HORRIBLE_CONSTANT = 30;
         private readonly string _executingDirectory;
         private readonly TreeViewManager _treeViewManager;
         private Point _dragStart;
 
+
         public MainWindow()
         {
+            var config = new LoggingConfiguration();
+
+            _executingDirectory = Directory.GetCurrentDirectory();
+
+            var logfile = new NLog.Targets.FileTarget("logfile")
+                {FileName = Path.Combine(_executingDirectory, "log.txt")};
+            
+            var args = Environment.GetCommandLineArgs();
+            if (args.Any(a => string.Equals(a, "--debug", StringComparison.OrdinalIgnoreCase)))
+            {
+                config.AddRule(LogLevel.Debug, LogLevel.Fatal, logfile);
+            }
+
+            LogManager.Configuration = config;
+
             InitializeComponent();
             var appState = LoadApplicationState();
 
             SetWindowDimensions(appState);
 
-            _executingDirectory = Directory.GetCurrentDirectory();
+            
             _treeViewManager = new TreeViewManager(rdpTree, _executingDirectory);
 
             _treeViewManager.AddRootToTreeView(appState);
@@ -123,7 +144,7 @@ namespace RDerP
         {
             if (!(rdpTree.SelectedItem is RdpTreeViewItem item))
             {
-                Logger.LogWarn($"Edit clicked but no {nameof(RdpTreeViewItem)} selected.");
+                Logger.Warn($"Edit clicked but no {nameof(RdpTreeViewItem)} selected.");
                 return;
             }
 
@@ -140,7 +161,7 @@ namespace RDerP
                 }
                 catch (Exception ex)
                 {
-                    Logger.LogError("Error trying to delete folder", ex);
+                    Logger.Error(ex, "Error trying to delete folder");
                     MessageBox.Show(this, ex.Message, Constants.ErrorMessageTitle);
                 }
 
@@ -156,7 +177,7 @@ namespace RDerP
                 }
                 catch (Exception ex)
                 {
-                    Logger.LogError("Error trying to delete .rdp file", ex);
+                    Logger.Error(ex, "Error trying to delete .rdp file");
                     MessageBox.Show(this, ex.Message, Constants.ErrorMessageTitle);
                 }
             }
@@ -278,7 +299,7 @@ namespace RDerP
             }
             catch (Exception ex)
             {
-                Logger.LogError($"Error moving {oldPath} to {newPath}", ex);
+                Logger.Error(ex, $"Error moving {oldPath} to {newPath}");
                 MessageBox.Show(this, ex.Message, Constants.ErrorMessageTitle);
             }
         }
@@ -292,7 +313,7 @@ namespace RDerP
             }
             catch(Exception ex)
             {
-                Logger.LogWarn("Failed to write application state", ex);
+                Logger.Error(ex, "Failed to write application state");
                 //swallow the shit out of this bad boy - nobody likes seeing errors on close
             }
 
@@ -358,7 +379,7 @@ namespace RDerP
             }
             catch (Exception ex)
             {
-                Logger.LogWarn("Failed to load application state", ex);
+                Logger.Error(ex, "Failed to load application state");
                 //if we fail we care not, just give an empty buggery back
                 return new ApplicationState();
             }

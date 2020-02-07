@@ -35,7 +35,6 @@ namespace RDerP.ViewModels
                 return;
             }
 
-            //https://stackoverflow.com/questions/3101392/starting-remote-desktop-client-no-control-over-pid-kill-pid-changes-after-star
             var startInfo = new ProcessStartInfo
             {
                 FileName = Constants.Mstsc,
